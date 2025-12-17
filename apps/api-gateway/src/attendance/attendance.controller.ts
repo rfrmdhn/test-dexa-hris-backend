@@ -12,7 +12,6 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ClientProxy } from '@nestjs/microservices';
 import { Request } from 'express';
-import { firstValueFrom } from 'rxjs';
 
 import {
     CheckInDto,
@@ -21,6 +20,9 @@ import {
     GetMyAttendanceDto,
     UserPayload,
     UserRole,
+    AttendanceResponseDto,
+    PaginatedAttendanceResponseDto,
+    sendToService,
 } from '@app/shared';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -49,7 +51,9 @@ export class AttendanceController {
             photoUrl: file ? `uploads/${file.filename}` : '',
         };
 
-        return firstValueFrom(this.client.send('attendance.check-in', checkInDto));
+        return sendToService<AttendanceResponseDto>(
+            this.client, 'attendance.check-in', checkInDto
+        );
     }
 
     @Post('check-out')
@@ -59,7 +63,9 @@ export class AttendanceController {
             userId: req.user.sub,
         };
 
-        return firstValueFrom(this.client.send('attendance.check-out', checkOutDto));
+        return sendToService<AttendanceResponseDto>(
+            this.client, 'attendance.check-out', checkOutDto
+        );
     }
 
     @Get('my')
@@ -73,14 +79,19 @@ export class AttendanceController {
             ...query,
         };
 
-        return firstValueFrom(this.client.send('attendance.get-my', getMyDto));
+        return sendToService<PaginatedAttendanceResponseDto>(
+            this.client, 'attendance.get-my', getMyDto
+        );
     }
 
     @Get()
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(UserRole.ADMIN)
     async getAll(@Query() query: GetAllAttendanceDto) {
-        return firstValueFrom(this.client.send('attendance.get-all', query));
+        return sendToService<PaginatedAttendanceResponseDto>(
+            this.client, 'attendance.get-all', query
+        );
     }
 }
+
 

@@ -7,4 +7,6 @@ export * from './dto/employee/employee.dto';
 export * from './interfaces/response.interface';
 export * from './interceptors/transform.interceptor';
 export * from './utils/password.utils';
+export * from './utils/microservice-client.utils';
+
 

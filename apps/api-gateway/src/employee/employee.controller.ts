@@ -11,13 +11,15 @@ import {
     Inject,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 
 import {
     CreateEmployeeDto,
     UpdateEmployeeDto,
     GetAllEmployeesDto,
     UserRole,
+    PaginatedEmployeesResponseDto,
+    EmployeeResponseDto,
+    sendToService,
 } from '@app/shared';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -34,26 +36,37 @@ export class EmployeeController {
 
     @Get()
     async findAll(@Query() query: GetAllEmployeesDto) {
-        return firstValueFrom(this.client.send('employee.find-all', query));
+        return sendToService<PaginatedEmployeesResponseDto>(
+            this.client, 'employee.find-all', query
+        );
     }
 
     @Get(':id')
     async findOne(@Param('id') id: string) {
-        return firstValueFrom(this.client.send('employee.find-one', { id }));
+        return sendToService<EmployeeResponseDto>(
+            this.client, 'employee.find-one', { id }
+        );
     }
 
     @Post()
     async create(@Body() createDto: CreateEmployeeDto) {
-        return firstValueFrom(this.client.send('employee.create', createDto));
+        return sendToService<EmployeeResponseDto>(
+            this.client, 'employee.create', createDto
+        );
     }
 
     @Put(':id')
     async update(@Param('id') id: string, @Body() updateDto: UpdateEmployeeDto) {
-        return firstValueFrom(this.client.send('employee.update', { id, updateDto }));
+        return sendToService<EmployeeResponseDto>(
+            this.client, 'employee.update', { id, updateDto }
+        );
     }
 
     @Delete(':id')
     async remove(@Param('id') id: string) {
-        return firstValueFrom(this.client.send('employee.remove', { id }));
+        return sendToService<{ message: string }>(
+            this.client, 'employee.remove', { id }
+        );
     }
 }
+
