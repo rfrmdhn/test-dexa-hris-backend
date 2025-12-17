@@ -9,6 +9,7 @@ import {
     Query,
     UseGuards,
     Inject,
+    Request,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 
@@ -20,6 +21,7 @@ import {
     PaginatedEmployeesResponseDto,
     EmployeeResponseDto,
     sendToService,
+    UserPayload,
 } from '@app/shared';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -33,6 +35,14 @@ export class EmployeeController {
     constructor(
         @Inject('AUTH_SERVICE') private readonly client: ClientProxy,
     ) { }
+
+    @Get('profile')
+    @Roles(UserRole.EMPLOYEE, UserRole.ADMIN)
+    async getProfile(@Request() req: { user: UserPayload }) {
+        return sendToService<EmployeeResponseDto>(
+            this.client, 'employee.find-one', { id: req.user.sub }
+        );
+    }
 
     @Get()
     async findAll(@Query() query: GetAllEmployeesDto) {
