@@ -100,5 +100,8 @@
     "moduleNameMapper": {
       "^@app/shared(|/.*)$": "<rootDir>/libs/shared/src/$1"
     }
+  },
+  "prisma": {
+    "schema": "libs/shared/src/prisma/schema.prisma"
   }
 }
