@@ -1,12 +1,15 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
     PrismaService,
     CheckInDto,
+    CheckOutDto,
     GetAllAttendanceDto,
+    GetMyAttendanceDto,
     AttendanceResponseDto,
+    PaginatedAttendanceResponseDto,
 } from '@app/shared';
 
 @Injectable()
@@ -62,6 +65,167 @@ export class AttendanceService {
             },
         });
 
+        return this.mapToResponseDto(attendance);
+    }
+
+    async checkOut(checkOutDto: CheckOutDto): Promise<AttendanceResponseDto> {
+        // Find today's open check-in
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const openCheckIn = await this.prisma.attendances.findFirst({
+            where: {
+                userId: checkOutDto.userId,
+                checkInTime: {
+                    gte: today,
+                },
+                checkOutTime: null,
+            },
+        });
+
+        if (!openCheckIn) {
+            throw new RpcException({ message: 'No active check-in found for today', statusCode: HttpStatus.BAD_REQUEST });
+        }
+
+        // Update with check-out time
+        const attendance = await this.prisma.attendances.update({
+            where: { id: openCheckIn.id },
+            data: {
+                checkOutTime: new Date(),
+            },
+            include: {
+                users: {
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                        role: true,
+                    },
+                },
+            },
+        });
+
+        return this.mapToResponseDto(attendance);
+    }
+
+    async getMyAttendance(query: GetMyAttendanceDto): Promise<PaginatedAttendanceResponseDto> {
+        const { userId, page = 1, limit = 10, startDate, endDate } = query;
+        const skip = (page - 1) * limit;
+
+        const where: Record<string, unknown> = { userId };
+
+        // Optional date filtering
+        if (startDate || endDate) {
+            where.checkInTime = {};
+            if (startDate) {
+                (where.checkInTime as Record<string, unknown>).gte = new Date(startDate);
+            }
+            if (endDate) {
+                (where.checkInTime as Record<string, unknown>).lte = new Date(endDate);
+            }
+        }
+
+        const [attendances, total] = await Promise.all([
+            this.prisma.attendances.findMany({
+                where,
+                include: {
+                    users: {
+                        select: {
+                            id: true,
+                            email: true,
+                            name: true,
+                            role: true,
+                        },
+                    },
+                },
+                orderBy: {
+                    checkInTime: 'desc',
+                },
+                skip,
+                take: limit,
+            }),
+            this.prisma.attendances.count({ where }),
+        ]);
+
+        return {
+            data: attendances.map((a: typeof attendances[number]) => this.mapToResponseDto(a)),
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    }
+
+    async getAll(query: GetAllAttendanceDto): Promise<PaginatedAttendanceResponseDto> {
+        const { userId, page = 1, limit = 10, startDate, endDate } = query;
+        const skip = (page - 1) * limit;
+
+        const where: Record<string, unknown> = {};
+
+        // Optional userId filter
+        if (userId) {
+            where.userId = userId;
+        }
+
+        // Optional date filtering
+        if (startDate || endDate) {
+            where.checkInTime = {};
+            if (startDate) {
+                (where.checkInTime as Record<string, unknown>).gte = new Date(startDate);
+            }
+            if (endDate) {
+                (where.checkInTime as Record<string, unknown>).lte = new Date(endDate);
+            }
+        }
+
+        const [attendances, total] = await Promise.all([
+            this.prisma.attendances.findMany({
+                where,
+                include: {
+                    users: {
+                        select: {
+                            id: true,
+                            email: true,
+                            name: true,
+                            role: true,
+                        },
+                    },
+                },
+                orderBy: {
+                    checkInTime: 'desc',
+                },
+                skip,
+                take: limit,
+            }),
+            this.prisma.attendances.count({ where }),
+        ]);
+
+        return {
+            data: attendances.map((a: typeof attendances[number]) => this.mapToResponseDto(a)),
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    }
+
+    private mapToResponseDto(attendance: {
+        id: string;
+        userId: string;
+        checkInTime: Date;
+        photoUrl: string;
+        checkOutTime: Date | null;
+        users?: {
+            id: string;
+            email: string;
+            name: string;
+            role: string;
+        } | null;
+    }): AttendanceResponseDto {
         return {
             id: attendance.id,
             userId: attendance.userId,
@@ -78,52 +242,5 @@ export class AttendanceService {
                 : undefined,
         };
     }
-
-    async getAll(query: GetAllAttendanceDto): Promise<AttendanceResponseDto[]> {
-        const where: Record<string, unknown> = {};
-
-        // Optional date filtering
-        if (query.startDate || query.endDate) {
-            where.checkInTime = {};
-            if (query.startDate) {
-                (where.checkInTime as Record<string, unknown>).gte = new Date(query.startDate);
-            }
-            if (query.endDate) {
-                (where.checkInTime as Record<string, unknown>).lte = new Date(query.endDate);
-            }
-        }
-
-        const attendances = await this.prisma.attendances.findMany({
-            where,
-            include: {
-                users: {
-                    select: {
-                        id: true,
-                        email: true,
-                        name: true,
-                        role: true,
-                    },
-                },
-            },
-            orderBy: {
-                checkInTime: 'desc',
-            },
-        });
-
-        return attendances.map((attendance) => ({
-            id: attendance.id,
-            userId: attendance.userId,
-            checkInTime: attendance.checkInTime,
-            photoUrl: attendance.photoUrl,
-            checkOutTime: attendance.checkOutTime,
-            user: attendance.users
-                ? {
-                    id: attendance.users.id,
-                    email: attendance.users.email,
-                    name: attendance.users.name,
-                    role: attendance.users.role,
-                }
-                : undefined,
-        }));
-    }
 }
+

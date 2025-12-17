@@ -8,6 +8,7 @@ import { existsSync, mkdirSync } from 'fs';
 
 import { AuthModule } from './auth/auth.module';
 import { AttendanceModule } from './attendance/attendance.module';
+import { EmployeeModule } from './employee/employee.module';
 
 // Create uploads directory if it doesn't exist
 const uploadPath = join(__dirname, '..', '..', '..', 'public', 'uploads');
@@ -43,6 +44,8 @@ if (!existsSync(uploadPath)) {
         }),
         AuthModule,
         AttendanceModule,
+        EmployeeModule,
     ],
 })
 export class AppModule { }
+

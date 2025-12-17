@@ -1,4 +1,5 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CheckInDto {
     @IsString()
@@ -8,6 +9,36 @@ export class CheckInDto {
     @IsString()
     @IsNotEmpty()
     photoUrl: string;
+}
+
+export class CheckOutDto {
+    @IsString()
+    @IsNotEmpty()
+    userId: string;
+}
+
+export class GetMyAttendanceDto {
+    @IsString()
+    @IsNotEmpty()
+    userId: string;
+
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    page?: number = 1;
+
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    limit?: number = 10;
+
+    @IsOptional()
+    startDate?: string;
+
+    @IsOptional()
+    endDate?: string;
 }
 
 export class AttendanceResponseDto {
@@ -24,8 +55,37 @@ export class AttendanceResponseDto {
     };
 }
 
-export class GetAllAttendanceDto {
-    // Optional filter params can be added here
-    startDate?: Date;
-    endDate?: Date;
+export class PaginatedAttendanceResponseDto {
+    data: AttendanceResponseDto[];
+    meta: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    };
 }
+
+export class GetAllAttendanceDto {
+    @IsOptional()
+    @IsString()
+    userId?: string;
+
+    @IsOptional()
+    startDate?: string;
+
+    @IsOptional()
+    endDate?: string;
+
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    page?: number = 1;
+
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Type(() => Number)
+    limit?: number = 10;
+}
+

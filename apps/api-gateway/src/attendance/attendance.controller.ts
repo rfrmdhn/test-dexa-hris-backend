@@ -7,6 +7,7 @@ import {
     UploadedFile,
     Req,
     Inject,
+    Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ClientProxy } from '@nestjs/microservices';
@@ -15,6 +16,9 @@ import { firstValueFrom } from 'rxjs';
 
 import {
     CheckInDto,
+    CheckOutDto,
+    GetAllAttendanceDto,
+    GetMyAttendanceDto,
     UserPayload,
     UserRole,
 } from '@app/shared';
@@ -40,21 +44,43 @@ export class AttendanceController {
         @UploadedFile() file: Express.Multer.File,
         @Req() req: AuthenticatedRequest,
     ) {
-        // Validation removed from Gateway - logic moved to Service
-        // Note: file might be undefined here if upload failed, but we pass generic DTO
-
         const checkInDto: CheckInDto = {
             userId: req.user.sub,
-            photoUrl: file ? `uploads/${file.filename}` : '', // Pass empty string if no file, Service will validate
+            photoUrl: file ? `uploads/${file.filename}` : '',
         };
 
         return firstValueFrom(this.client.send('attendance.check-in', checkInDto));
     }
 
+    @Post('check-out')
+    @UseGuards(JwtAuthGuard)
+    async checkOut(@Req() req: AuthenticatedRequest) {
+        const checkOutDto: CheckOutDto = {
+            userId: req.user.sub,
+        };
+
+        return firstValueFrom(this.client.send('attendance.check-out', checkOutDto));
+    }
+
+    @Get('my')
+    @UseGuards(JwtAuthGuard)
+    async getMyAttendance(
+        @Req() req: AuthenticatedRequest,
+        @Query() query: Omit<GetMyAttendanceDto, 'userId'>,
+    ) {
+        const getMyDto: GetMyAttendanceDto = {
+            userId: req.user.sub,
+            ...query,
+        };
+
+        return firstValueFrom(this.client.send('attendance.get-my', getMyDto));
+    }
+
     @Get()
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(UserRole.ADMIN)
-    async getAll() {
-        return firstValueFrom(this.client.send('attendance.get-all', {}));
+    async getAll(@Query() query: GetAllAttendanceDto) {
+        return firstValueFrom(this.client.send('attendance.get-all', query));
     }
 }
+
