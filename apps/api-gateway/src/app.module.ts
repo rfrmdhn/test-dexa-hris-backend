@@ -10,7 +10,6 @@ import { AuthModule } from './auth/auth.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { EmployeeModule } from './employee/employee.module';
 
-// Create uploads directory if it doesn't exist
 const uploadPath = join(__dirname, '..', '..', '..', 'public', 'uploads');
 if (!existsSync(uploadPath)) {
     mkdirSync(uploadPath, { recursive: true });
@@ -31,7 +30,6 @@ if (!existsSync(uploadPath)) {
                 },
             }),
             fileFilter: (req, file, cb) => {
-                // Allow only images
                 if (file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
                     cb(null, true);
                 } else {

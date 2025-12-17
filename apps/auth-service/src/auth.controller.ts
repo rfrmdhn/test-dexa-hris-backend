@@ -29,7 +29,6 @@ export class AuthController {
         return this.authService.login(loginDto);
     }
 
-    // Employee CRUD
     @MessagePattern('employee.find-all')
     async findAllEmployees(@Payload() query: GetAllEmployeesDto) {
         return this.employeeService.findAll(query);

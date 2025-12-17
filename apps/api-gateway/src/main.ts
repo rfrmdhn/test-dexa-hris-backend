@@ -9,19 +9,15 @@ import { TransformInterceptor } from '@app/shared';
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-    // Enable CORS
     app.enableCors();
 
-    // Global Validation Pipe (Enabled for Monolith)
     app.useGlobalPipes(new ValidationPipe({
         whitelist: true,
         transform: true,
     }));
 
-    // Global Response Interceptor
     app.useGlobalInterceptors(new TransformInterceptor());
 
-    // Serve static files (uploads)
     app.useStaticAssets(join(__dirname, '..', '..', '..', 'public'), {
         prefix: '/public/',
     });
@@ -31,3 +27,4 @@ async function bootstrap() {
     console.log(`API Gateway is running on: http://localhost:${port}`);
 }
 bootstrap();
+

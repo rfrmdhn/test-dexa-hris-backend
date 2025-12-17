@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
-import { HttpException, HttpStatus } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 
 import {
@@ -22,28 +21,22 @@ export class AuthService {
     ) { }
 
     async register(registerDto: RegisterDto) {
-        // Check if user already exists
         const existingUser = await this.prisma.users.findUnique({
             where: { email: registerDto.email },
         });
 
         if (existingUser) {
-            // In TCP/Microservices, RpcException is often preferred, but HttpException also works 
-            // if the Gateway uses proper exception filters.
-            // We'll stick to RpcException for clear microservice signaling, 
-            // or standard HttpException if we assume standard serialization.
-            // Let's use RpcException for "Distributed" clarity.
-            throw new RpcException({ message: 'User with this email already exists', statusCode: HttpStatus.CONFLICT });
+            throw new RpcException({
+                message: 'User with this email already exists',
+                statusCode: HttpStatus.CONFLICT
+            });
         }
 
-        // Hash password
         const hashedPassword = await hashPassword(registerDto.password);
 
-        // Generate UUID and create user
-        const userId = uuidv4();
         const user = await this.prisma.users.create({
             data: {
-                id: userId,
+                id: uuidv4(),
                 email: registerDto.email,
                 password: hashedPassword,
                 name: registerDto.name,
@@ -63,7 +56,6 @@ export class AuthService {
     }
 
     async login(loginDto: LoginDto): Promise<LoginResponseDto> {
-        // Find user by email
         const user = await this.prisma.users.findUnique({
             where: { email: loginDto.email },
         });
@@ -72,14 +64,12 @@ export class AuthService {
             throw new RpcException({ message: 'Invalid credentials', statusCode: HttpStatus.UNAUTHORIZED });
         }
 
-        // Compare passwords
         const isPasswordValid = await comparePassword(loginDto.password, user.password);
 
         if (!isPasswordValid) {
             throw new RpcException({ message: 'Invalid credentials', statusCode: HttpStatus.UNAUTHORIZED });
         }
 
-        // Generate JWT token
         const payload = {
             sub: user.id,
             email: user.email,
@@ -99,3 +89,4 @@ export class AuthService {
         };
     }
 }
+

@@ -2,8 +2,6 @@ import { IsString, IsEmail, IsNotEmpty, IsOptional, IsEnum, MinLength, IsInt, Mi
 import { Type } from 'class-transformer';
 import { UserRole } from '../auth/auth.dto';
 
-// ========== Request DTOs ==========
-
 export class CreateEmployeeDto {
     @IsEmail()
     @IsNotEmpty()
@@ -63,8 +61,6 @@ export class GetAllEmployeesDto {
     @IsEnum(UserRole)
     role?: UserRole;
 }
-
-// ========== Response DTOs ==========
 
 export class EmployeeResponseDto {
     id: string;

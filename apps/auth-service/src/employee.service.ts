@@ -10,6 +10,9 @@ import {
     EmployeeResponseDto,
     PaginatedEmployeesResponseDto,
     hashPassword,
+    EMPLOYEE_SELECT,
+    buildPaginatedResponse,
+    calculateSkip,
 } from '@app/shared';
 
 @Injectable()
@@ -18,61 +21,22 @@ export class EmployeeService {
 
     async findAll(query: GetAllEmployeesDto): Promise<PaginatedEmployeesResponseDto> {
         const { page = 1, limit = 10, search, role } = query;
-        const skip = (page - 1) * limit;
 
-        const where: Record<string, unknown> = {};
+        const where = this.buildEmployeeWhere({ search, role });
+        const [employees, total] = await this.findEmployeesWithCount(where, page, limit);
 
-        if (search) {
-            where.OR = [
-                { name: { contains: search } },
-                { email: { contains: search } },
-            ];
-        }
-
-        if (role) {
-            where.role = role;
-        }
-
-        const [employees, total] = await Promise.all([
-            this.prisma.users.findMany({
-                where,
-                select: {
-                    id: true,
-                    email: true,
-                    name: true,
-                    role: true,
-                    createdAt: true,
-                    updatedAt: true,
-                },
-                orderBy: { createdAt: 'desc' },
-                skip,
-                take: limit,
-            }),
-            this.prisma.users.count({ where }),
-        ]);
-
-        return {
-            data: employees.map((e: typeof employees[number]) => this.mapToResponseDto(e)),
-            meta: {
-                total,
-                page,
-                limit,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
+        return buildPaginatedResponse(
+            employees.map((e: Awaited<ReturnType<typeof this.findEmployeesWithCount>>[0][number]) => this.mapToResponseDto(e)),
+            total,
+            page,
+            limit
+        );
     }
 
     async findOne(id: string): Promise<EmployeeResponseDto> {
         const employee = await this.prisma.users.findUnique({
             where: { id },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                role: true,
-                createdAt: true,
-                updatedAt: true,
-            },
+            select: EMPLOYEE_SELECT,
         });
 
         if (!employee) {
@@ -83,104 +47,110 @@ export class EmployeeService {
     }
 
     async create(createDto: CreateEmployeeDto): Promise<EmployeeResponseDto> {
-        // Check if email already exists
-        const existingUser = await this.prisma.users.findUnique({
-            where: { email: createDto.email },
-        });
+        await this.ensureEmailNotExists(createDto.email);
 
-        if (existingUser) {
-            throw new RpcException({ message: 'User with this email already exists', statusCode: HttpStatus.CONFLICT });
-        }
-
-        // Hash password
-        const hashedPassword = await hashPassword(createDto.password);
-
-        // Generate UUID and create user
-        const userId = uuidv4();
         const employee = await this.prisma.users.create({
             data: {
-                id: userId,
+                id: uuidv4(),
                 email: createDto.email,
-                password: hashedPassword,
+                password: await hashPassword(createDto.password),
                 name: createDto.name,
                 role: createDto.role || 'EMPLOYEE',
             },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                role: true,
-                createdAt: true,
-                updatedAt: true,
-            },
+            select: EMPLOYEE_SELECT,
         });
 
         return this.mapToResponseDto(employee);
     }
 
     async update(id: string, updateDto: UpdateEmployeeDto): Promise<EmployeeResponseDto> {
-        // Check if employee exists
-        const existingEmployee = await this.prisma.users.findUnique({
-            where: { id },
-        });
+        const existingEmployee = await this.prisma.users.findUnique({ where: { id } });
 
         if (!existingEmployee) {
             throw new RpcException({ message: 'Employee not found', statusCode: HttpStatus.NOT_FOUND });
         }
 
-        // Check if email is being updated and already exists
         if (updateDto.email && updateDto.email !== existingEmployee.email) {
-            const emailExists = await this.prisma.users.findUnique({
-                where: { email: updateDto.email },
-            });
-
-            if (emailExists) {
-                throw new RpcException({ message: 'User with this email already exists', statusCode: HttpStatus.CONFLICT });
-            }
+            await this.ensureEmailNotExists(updateDto.email);
         }
 
-        // Prepare update data
-        const updateData: Record<string, unknown> = {};
-
-        if (updateDto.email) updateData.email = updateDto.email;
-        if (updateDto.name) updateData.name = updateDto.name;
-        if (updateDto.role) updateData.role = updateDto.role;
-
-        if (updateDto.password) {
-            updateData.password = await hashPassword(updateDto.password);
-        }
+        const updateData = await this.buildUpdateData(updateDto);
 
         const employee = await this.prisma.users.update({
             where: { id },
             data: updateData,
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                role: true,
-                createdAt: true,
-                updatedAt: true,
-            },
+            select: EMPLOYEE_SELECT,
         });
 
         return this.mapToResponseDto(employee);
     }
 
     async remove(id: string): Promise<{ message: string }> {
-        // Check if employee exists
-        const existingEmployee = await this.prisma.users.findUnique({
-            where: { id },
-        });
+        const existingEmployee = await this.prisma.users.findUnique({ where: { id } });
 
         if (!existingEmployee) {
             throw new RpcException({ message: 'Employee not found', statusCode: HttpStatus.NOT_FOUND });
         }
 
-        await this.prisma.users.delete({
-            where: { id },
-        });
+        await this.prisma.users.delete({ where: { id } });
 
         return { message: 'Employee deleted successfully' };
+    }
+
+
+    private async ensureEmailNotExists(email: string): Promise<void> {
+        const existingUser = await this.prisma.users.findUnique({ where: { email } });
+        if (existingUser) {
+            throw new RpcException({
+                message: 'User with this email already exists',
+                statusCode: HttpStatus.CONFLICT
+            });
+        }
+    }
+
+    private buildEmployeeWhere(params: { search?: string; role?: string }): Record<string, unknown> {
+        const where: Record<string, unknown> = {};
+
+        if (params.search) {
+            where.OR = [
+                { name: { contains: params.search } },
+                { email: { contains: params.search } },
+            ];
+        }
+
+        if (params.role) {
+            where.role = params.role;
+        }
+
+        return where;
+    }
+
+    private async findEmployeesWithCount(
+        where: Record<string, unknown>,
+        page: number,
+        limit: number
+    ) {
+        return Promise.all([
+            this.prisma.users.findMany({
+                where,
+                select: EMPLOYEE_SELECT,
+                orderBy: { createdAt: 'desc' },
+                skip: calculateSkip(page, limit),
+                take: limit,
+            }),
+            this.prisma.users.count({ where }),
+        ]);
+    }
+
+    private async buildUpdateData(updateDto: UpdateEmployeeDto): Promise<Record<string, unknown>> {
+        const updateData: Record<string, unknown> = {};
+
+        if (updateDto.email) updateData.email = updateDto.email;
+        if (updateDto.name) updateData.name = updateDto.name;
+        if (updateDto.role) updateData.role = updateDto.role;
+        if (updateDto.password) updateData.password = await hashPassword(updateDto.password);
+
+        return updateData;
     }
 
     private mapToResponseDto(employee: {
@@ -201,3 +171,4 @@ export class EmployeeService {
         };
     }
 }
+

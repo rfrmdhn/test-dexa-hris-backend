@@ -11,14 +11,12 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 async function main() {
-    console.log('🌱 Starting database seeding...');
+    console.log('Starting database seeding...');
 
-    // Clear existing data (optional, comment out if you want to preserve data)
-    console.log('🗑️  Clearing existing data...');
+    console.log('Clearing existing data...');
     await prisma.attendances.deleteMany();
     await prisma.users.deleteMany();
 
-    // Create Admin User
     const adminId = uuidv4();
     const adminPassword = await hashPassword('admin123');
     const admin = await prisma.users.create({
@@ -30,9 +28,8 @@ async function main() {
             role: users_role.ADMIN,
         },
     });
-    console.log(`✅ Created Admin: ${admin.email}`);
+    console.log(`Created Admin: ${admin.email}`);
 
-    // Create Employee Users
     const employees = [
         { name: 'John Doe', email: 'john.doe@dexa.com' },
         { name: 'Jane Smith', email: 'jane.smith@dexa.com' },
@@ -51,9 +48,8 @@ async function main() {
                 role: users_role.EMPLOYEE,
             },
         });
-        console.log(`✅ Created Employee: ${user.email}`);
+        console.log(`Created Employee: ${user.email}`);
 
-        // Create sample attendance for this employee (yesterday and today)
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         yesterday.setHours(8, 30, 0, 0);
@@ -64,13 +60,13 @@ async function main() {
                 userId: empId,
                 checkInTime: yesterday,
                 photoUrl: 'uploads/sample-checkin.jpg',
-                checkOutTime: new Date(yesterday.getTime() + 8 * 60 * 60 * 1000), // 8 hours later
+                checkOutTime: new Date(yesterday.getTime() + 8 * 60 * 60 * 1000),
             },
         });
-        console.log(`  📅 Added attendance record for ${emp.name} (yesterday)`);
+        console.log(`Added attendance record for ${emp.name} (yesterday)`);
     }
 
-    console.log('\n🎉 Seeding completed successfully!');
+    console.log('\nSeeding completed successfully!');
     console.log('\n--- Login Credentials ---');
     console.log('Admin:    admin@dexa.com / admin123');
     console.log('Employee: john.doe@dexa.com / employee123');
@@ -80,9 +76,10 @@ async function main() {
 
 main()
     .catch((e) => {
-        console.error('❌ Seeding failed:', e);
+        console.error('Seeding failed:', e);
         process.exit(1);
     })
     .finally(async () => {
         await prisma.$disconnect();
     });
+

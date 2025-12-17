@@ -3,10 +3,7 @@ import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout, catchError } from 'rxjs/operators';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
-/**
- * Default timeout for microservice calls (in milliseconds)
- */
-const DEFAULT_TIMEOUT = 30000; // 30 seconds
+const DEFAULT_TIMEOUT = 30000;
 
 /**
  * Options for microservice client calls
@@ -40,7 +37,6 @@ export async function sendToService<TResult = unknown, TInput = unknown>(
         client.send<TResult>(pattern, data).pipe(
             timeout(timeoutMs),
             catchError((error) => {
-                // Handle timeout errors
                 if (error instanceof TimeoutError) {
                     throw new HttpException(
                         {
@@ -52,7 +48,6 @@ export async function sendToService<TResult = unknown, TInput = unknown>(
                     );
                 }
 
-                // Handle RPC errors (from microservices)
                 if (error?.message && error?.statusCode) {
                     throw new HttpException(
                         {
@@ -63,7 +58,6 @@ export async function sendToService<TResult = unknown, TInput = unknown>(
                     );
                 }
 
-                // Handle connection errors
                 if (error?.code === 'ECONNREFUSED') {
                     throw new HttpException(
                         {
@@ -75,7 +69,6 @@ export async function sendToService<TResult = unknown, TInput = unknown>(
                     );
                 }
 
-                // Re-throw unknown errors
                 throw error;
             })
         )
