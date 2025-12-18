@@ -1,5 +1,4 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
+import { Injectable, HttpStatus, NotFoundException, BadRequestException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -32,16 +31,13 @@ export class AttendanceService {
         });
 
         if (!user) {
-            throw new RpcException({ message: 'User not found', statusCode: HttpStatus.NOT_FOUND });
+            throw new NotFoundException('User not found');
         }
 
         const existingCheckIn = await this.findTodayOpenCheckIn(checkInDto.userId);
 
         if (existingCheckIn) {
-            throw new RpcException({
-                message: 'You have already checked in today and have not checked out',
-                statusCode: HttpStatus.BAD_REQUEST
-            });
+            throw new BadRequestException('You have already checked in today and have not checked out');
         }
 
         const attendance = await this.prisma.attendances.create({
@@ -61,10 +57,7 @@ export class AttendanceService {
         const openCheckIn = await this.findTodayOpenCheckIn(checkOutDto.userId);
 
         if (!openCheckIn) {
-            throw new RpcException({
-                message: 'No active check-in found for today',
-                statusCode: HttpStatus.BAD_REQUEST
-            });
+            throw new BadRequestException('No active check-in found for today');
         }
 
         const attendance = await this.prisma.attendances.update({

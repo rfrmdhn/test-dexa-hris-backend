@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { PrismaModule } from '@app/shared';
+import { PrismaModule, JwtStrategy } from '@app/shared';
+import { PassportModule } from '@nestjs/passport';
 
 import { AuthController } from './auth.controller';
 import { EmployeeController } from './employee.controller';
@@ -16,6 +17,7 @@ import { EmployeeService } from './employee.service';
             envFilePath: './.env',
         }),
         PrismaModule,
+        PassportModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
             useFactory: (configService: ConfigService): JwtModuleOptions => {
@@ -34,7 +36,7 @@ import { EmployeeService } from './employee.service';
         }),
     ],
     controllers: [AuthController, EmployeeController],
-    providers: [AuthService, EmployeeService],
+    providers: [AuthService, EmployeeService, JwtStrategy],
 })
 export class AuthModule { }
 

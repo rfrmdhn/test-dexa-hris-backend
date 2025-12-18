@@ -71,7 +71,7 @@ export class AttendanceController {
     @UseGuards(JwtAuthGuard)
     async getMyAttendance(
         @Req() req: AuthenticatedRequest,
-        @Query() query: Omit<GetMyAttendanceDto, 'userId'>,
+        @Query() query: GetAllAttendanceDto,
     ) {
         const getMyDto: GetMyAttendanceDto = {
             userId: req.user.sub,

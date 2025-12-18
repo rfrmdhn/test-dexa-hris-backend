@@ -1,5 +1,4 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
+import { Injectable, HttpStatus, NotFoundException, ConflictException, InternalServerErrorException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -34,16 +33,21 @@ export class EmployeeService {
     }
 
     async findOne(id: string): Promise<EmployeeResponseDto> {
-        const employee = await this.prisma.users.findUnique({
-            where: { id },
-            select: EMPLOYEE_SELECT,
-        });
+        try {
+            const employee = await this.prisma.users.findUnique({
+                where: { id },
+                select: EMPLOYEE_SELECT,
+            });
 
-        if (!employee) {
-            throw new RpcException({ message: 'Employee not found', statusCode: HttpStatus.NOT_FOUND });
+            if (!employee) {
+                throw new NotFoundException('Employee not found');
+            }
+
+            return this.mapToResponseDto(employee);
+        } catch (error) {
+            if (error instanceof NotFoundException) throw error;
+            throw new InternalServerErrorException(`FindOne Error: ${error.message} \nStack: ${error.stack}`);
         }
-
-        return this.mapToResponseDto(employee);
     }
 
     async create(createDto: CreateEmployeeDto): Promise<EmployeeResponseDto> {
@@ -67,7 +71,7 @@ export class EmployeeService {
         const existingEmployee = await this.prisma.users.findUnique({ where: { id } });
 
         if (!existingEmployee) {
-            throw new RpcException({ message: 'Employee not found', statusCode: HttpStatus.NOT_FOUND });
+            throw new NotFoundException('Employee not found');
         }
 
         if (updateDto.email && updateDto.email !== existingEmployee.email) {
@@ -89,7 +93,7 @@ export class EmployeeService {
         const existingEmployee = await this.prisma.users.findUnique({ where: { id } });
 
         if (!existingEmployee) {
-            throw new RpcException({ message: 'Employee not found', statusCode: HttpStatus.NOT_FOUND });
+            throw new NotFoundException('Employee not found');
         }
 
         await this.prisma.users.delete({ where: { id } });
@@ -101,10 +105,7 @@ export class EmployeeService {
     private async ensureEmailNotExists(email: string): Promise<void> {
         const existingUser = await this.prisma.users.findUnique({ where: { email } });
         if (existingUser) {
-            throw new RpcException({
-                message: 'User with this email already exists',
-                statusCode: HttpStatus.CONFLICT
-            });
+            throw new ConflictException('User with this email already exists');
         }
     }
 
