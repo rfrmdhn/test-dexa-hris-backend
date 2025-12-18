@@ -42,7 +42,11 @@ export function buildDateRangeFilter(
 
     const filter: { gte?: Date; lte?: Date } = {};
     if (startDate) filter.gte = new Date(startDate);
-    if (endDate) filter.lte = new Date(endDate);
+    if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.lte = end;
+    }
     return filter;
 }
 

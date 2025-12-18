@@ -202,7 +202,9 @@ export class AttendanceService {
             id: attendance.id,
             userId: attendance.userId,
             checkInTime: attendance.checkInTime,
-            photoUrl: attendance.photoUrl,
+            photoUrl: attendance.photoUrl.startsWith('uploads/')
+                ? `/public/${attendance.photoUrl}`
+                : attendance.photoUrl,
             checkOutTime: attendance.checkOutTime,
             user: attendance.users ?? undefined,
         };
