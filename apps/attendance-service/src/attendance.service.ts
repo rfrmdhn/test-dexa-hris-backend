@@ -12,6 +12,7 @@ import {
     AttendanceResponseDto,
     PaginatedAttendanceResponseDto,
     CheckInStatusResponseDto,
+    AttendanceStatus,
     USER_SELECT,
     getStartOfDay,
     buildDateRangeFilter,
@@ -114,8 +115,7 @@ export class AttendanceService {
             });
 
             return {
-                canCheckIn: false,
-                canCheckOut: true,
+                status: AttendanceStatus.CHECKED_IN,
                 message: 'Anda sudah check-in hari ini. Silakan check-out.',
                 currentAttendance: attendanceWithUser ? this.mapToResponseDto(attendanceWithUser) : undefined,
             };
@@ -135,8 +135,7 @@ export class AttendanceService {
         if (todayCompletedAttendance) {
             // User sudah check-in dan check-out hari ini
             return {
-                canCheckIn: false,
-                canCheckOut: false,
+                status: AttendanceStatus.CHECKED_OUT,
                 message: 'Anda sudah menyelesaikan absensi hari ini.',
                 currentAttendance: this.mapToResponseDto(todayCompletedAttendance),
             };
@@ -144,8 +143,7 @@ export class AttendanceService {
 
         // User belum check-in sama sekali hari ini
         return {
-            canCheckIn: true,
-            canCheckOut: false,
+            status: AttendanceStatus.NOT_CHECKED_IN,
             message: 'Anda belum check-in hari ini. Silakan check-in.',
         };
     }

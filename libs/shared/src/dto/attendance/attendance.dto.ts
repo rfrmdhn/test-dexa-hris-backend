@@ -95,9 +95,14 @@ export class GetStatusDto {
     userId: string;
 }
 
+export enum AttendanceStatus {
+    NOT_CHECKED_IN = 'NOT_CHECKED_IN',
+    CHECKED_IN = 'CHECKED_IN',
+    CHECKED_OUT = 'CHECKED_OUT',
+}
+
 export class CheckInStatusResponseDto {
-    canCheckIn: boolean;
-    canCheckOut: boolean;
+    status: AttendanceStatus;
     message: string;
     currentAttendance?: AttendanceResponseDto;
 }

@@ -16,12 +16,25 @@ export class TransformInterceptor<T>
         next: CallHandler,
     ): Observable<BaseResponse<T>> {
         return next.handle().pipe(
-            map((data) => ({
-                statusCode: context.switchToHttp().getResponse().statusCode,
-                message: data?.message || 'Success',
-                data: data?.data ? data.data : data,
-                success: true
-            })),
+            map((data) => {
+                const message = data?.message || 'Success';
+
+                // Extract the actual data, removing message from it if present
+                let responseData = data?.data ? data.data : data;
+
+                // If responseData has a message property, remove it to avoid duplication
+                if (responseData && typeof responseData === 'object' && 'message' in responseData) {
+                    const { message: _, ...rest } = responseData;
+                    responseData = rest;
+                }
+
+                return {
+                    statusCode: context.switchToHttp().getResponse().statusCode,
+                    message,
+                    data: responseData,
+                    success: true,
+                };
+            }),
         );
     }
 }
