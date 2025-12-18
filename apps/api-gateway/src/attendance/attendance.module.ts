@@ -12,12 +12,6 @@ import { PrismaModule } from '@app/shared';
 import { AttendanceController } from './attendance.controller';
 import { AuthModule } from '../auth/auth.module';
 
-// Use process.cwd() to get project root, not __dirname which points to dist folder
-const uploadPath = join(process.cwd(), 'public', 'uploads');
-if (!existsSync(uploadPath)) {
-    mkdirSync(uploadPath, { recursive: true });
-}
-
 @Module({
     imports: [
         ConfigModule,
@@ -25,7 +19,14 @@ if (!existsSync(uploadPath)) {
         PrismaModule,
         MulterModule.register({
             storage: diskStorage({
-                destination: uploadPath,
+                destination: (req, file, cb) => {
+                    const uploadPath = join(process.cwd(), 'public', 'uploads');
+                    // Create folder if it doesn't exist
+                    if (!existsSync(uploadPath)) {
+                        mkdirSync(uploadPath, { recursive: true });
+                    }
+                    cb(null, uploadPath);
+                },
                 filename: (req, file, cb) => {
                     const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
                     cb(null, uniqueName);
@@ -60,4 +61,3 @@ if (!existsSync(uploadPath)) {
     controllers: [AttendanceController],
 })
 export class AttendanceModule { }
-

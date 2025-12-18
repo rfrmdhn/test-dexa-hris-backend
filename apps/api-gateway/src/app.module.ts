@@ -10,12 +10,6 @@ import { AuthModule } from './auth/auth.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { EmployeeModule } from './employee/employee.module';
 
-// Use process.cwd() to get project root, not __dirname which points to dist folder
-const uploadPath = join(process.cwd(), 'public', 'uploads');
-if (!existsSync(uploadPath)) {
-    mkdirSync(uploadPath, { recursive: true });
-}
-
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -24,7 +18,14 @@ if (!existsSync(uploadPath)) {
         }),
         MulterModule.register({
             storage: diskStorage({
-                destination: uploadPath,
+                destination: (req, file, cb) => {
+                    const uploadPath = join(process.cwd(), 'public', 'uploads');
+                    // Create folder if it doesn't exist
+                    if (!existsSync(uploadPath)) {
+                        mkdirSync(uploadPath, { recursive: true });
+                    }
+                    cb(null, uploadPath);
+                },
                 filename: (req, file, cb) => {
                     const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
                     cb(null, uniqueName);
