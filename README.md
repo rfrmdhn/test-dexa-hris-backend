@@ -27,6 +27,9 @@ Ensure you have the following installed on your machine:
 
 2.  **Install dependencies**:
     ```bash
+    npm install
+    ```
+
 ## Configuration
 
 1.  **Environment Variables**:
