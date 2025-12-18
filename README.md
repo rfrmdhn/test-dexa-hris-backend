@@ -28,23 +28,19 @@ Ensure you have the following installed on your machine:
 
 2.  **Install dependencies**:
     ```bash
-    npm install
-    ```
-
 ## Configuration
 
 1.  **Environment Variables**:
-    Copy the example environment file to create your local `.env` configuration:
+    Create your local `.env` file by copying the example:
     ```bash
     cp .env.example .env
     ```
 
 2.  **Database Connection**:
-    Open the `.env` file and configure your database connection string and service ports.
-    
+    Open the `.env` file and **update the `DATABASE_URL`** to match your local MySQL setup:
     ```env
     # Database
-    DATABASE_URL="mysql://root:root@localhost:3306/dexa_db"
+    DATABASE_URL="mysql://USER:PASSWORD@localhost:3306/dexa_db"
 
     # JWT Configuration
     JWT_SECRET="your-secret-key"
@@ -55,81 +51,53 @@ Ensure you have the following installed on your machine:
     AUTH_SERVICE_PORT=3001
     ATTENDANCE_SERVICE_PORT=3002
     ```
+    *Ensure your MySQL server is running and the user has permissions.*
 
 ## Database Setup
 
-This project uses **Prisma** as the ORM.
-
 1.  **Generate Prisma Client**:
-    Generate the type-safe client based on the schema located in `libs/shared/src/prisma/schema.prisma`.
     ```bash
     npm run prisma:generate
     ```
 
-2.  **Sync Database Schema**:
-    Push the schema state to your database.
+2.  **Migrate & Sync Database**:
+    This command will create the tables and apply any pending migrations:
     ```bash
-    npm run prisma:push
+    npm run prisma:migrate
     ```
-    *Alternatively, for migration-based workflows:* `npm run prisma:migrate`
 
-3.  **Seed Database (Optional)**:
-    Populate the database with initial data.
+3.  **Seed Database**:
+    Populate the database with initial data (Admin user, etc.):
     ```bash
-    npm run prisma:seed
+    npx prisma db seed
     ```
+    *Or using the script alias:* `npm run prisma:seed`
 
 ## Running the Applications
 
-Since this is a microservices architecture, you need to run the services required for your feature.
+Open separate terminals for each service:
 
-### Development Mode
-
-You can run services individually in separate terminal instances:
-
-*   **Run API Gateway** (Main entry point):
-    ```bash
-    npm run start:gateway
-    ```
-
-*   **Run Auth Service**:
+1.  **Auth Service**:
     ```bash
     npm run start:auth
     ```
 
-*   **Run Attendance Service**:
+2.  **Attendance Service**:
     ```bash
     npm run start:attendance
     ```
 
-*   **Run All (Concurrent)**:
-    If you want to run everything, simply open multiple terminals and run the commands above.
-
-### Production Mode
-
-Build and run the production version:
-
-```bash
-npm run build
-npm run start:prod
-```
-
 ## Testing
 
-*   **Unit Tests**:
-    ```bash
-    npm run test
-    ```
-
-*   **E2E Tests**:
-    ```bash
-    npm run test:e2e
-    ```
+*   **Unit Tests**: `npm run test`
+*   **E2E Tests**: `npm run test:e2e`
 
 ## Useful Commands
 
 | Command | Description |
 | :--- | :--- |
-| `npm run lint` | Lint the codebase using ESLint |
+| `npx prisma db seed` | Seed the database |
+| `npm run prisma:generate` | Regenerate Prisma Client |
+| `npm run build` | Build for production |
+| `npm run lint` | Lint code |
 | `npm run format` | Format code using Prettier |
-| `npm run build` | Build the application for production |

@@ -103,6 +103,7 @@
     }
   },
   "prisma": {
-    "schema": "libs/shared/src/prisma/schema.prisma"
+    "schema": "libs/shared/src/prisma/schema.prisma",
+    "seed": "ts-node libs/shared/src/prisma/seed.ts"
   }
 }
