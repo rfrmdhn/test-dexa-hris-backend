@@ -12,7 +12,8 @@ import { PrismaModule } from '@app/shared';
 import { AttendanceController } from './attendance.controller';
 import { AuthModule } from '../auth/auth.module';
 
-const uploadPath = join(__dirname, '..', '..', '..', '..', 'public', 'uploads');
+// Use process.cwd() to get project root, not __dirname which points to dist folder
+const uploadPath = join(process.cwd(), 'public', 'uploads');
 if (!existsSync(uploadPath)) {
     mkdirSync(uploadPath, { recursive: true });
 }

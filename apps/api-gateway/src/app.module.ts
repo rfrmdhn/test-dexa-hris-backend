@@ -10,7 +10,8 @@ import { AuthModule } from './auth/auth.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { EmployeeModule } from './employee/employee.module';
 
-const uploadPath = join(__dirname, '..', '..', '..', 'public', 'uploads');
+// Use process.cwd() to get project root, not __dirname which points to dist folder
+const uploadPath = join(process.cwd(), 'public', 'uploads');
 if (!existsSync(uploadPath)) {
     mkdirSync(uploadPath, { recursive: true });
 }
@@ -46,4 +47,3 @@ if (!existsSync(uploadPath)) {
     ],
 })
 export class AppModule { }
-
