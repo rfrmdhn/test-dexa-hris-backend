@@ -3,6 +3,7 @@ import {
     Get,
     Post,
     Put,
+    Patch,
     Delete,
     Param,
     Body,
@@ -67,6 +68,13 @@ export class EmployeeController {
 
     @Put(':id')
     async update(@Param('id') id: string, @Body() updateDto: UpdateEmployeeDto) {
+        return sendToService<EmployeeResponseDto>(
+            this.client, 'employee.update', { id, updateDto }
+        );
+    }
+
+    @Patch(':id')
+    async patch(@Param('id') id: string, @Body() updateDto: UpdateEmployeeDto) {
         return sendToService<EmployeeResponseDto>(
             this.client, 'employee.update', { id, updateDto }
         );
