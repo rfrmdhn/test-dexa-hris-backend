@@ -18,7 +18,7 @@ async function bootstrap() {
 
     app.useGlobalInterceptors(new TransformInterceptor());
 
-    app.useStaticAssets(join(__dirname, '..', '..', '..', 'public'), {
+    app.useStaticAssets(join(process.cwd(), 'public'), {
         prefix: '/public/',
     });
 
