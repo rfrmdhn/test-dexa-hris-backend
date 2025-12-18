@@ -8,8 +8,10 @@ import {
     CheckOutDto,
     GetAllAttendanceDto,
     GetMyAttendanceDto,
+    GetStatusDto,
     AttendanceResponseDto,
     PaginatedAttendanceResponseDto,
+    CheckInStatusResponseDto,
     USER_SELECT,
     getStartOfDay,
     buildDateRangeFilter,
@@ -99,6 +101,53 @@ export class AttendanceService {
             page,
             limit
         );
+    }
+
+    async getCheckInStatus(query: GetStatusDto): Promise<CheckInStatusResponseDto> {
+        const openCheckIn = await this.findTodayOpenCheckIn(query.userId);
+
+        if (openCheckIn) {
+            // User sudah check-in hari ini dan belum check-out
+            const attendanceWithUser = await this.prisma.attendances.findUnique({
+                where: { id: openCheckIn.id },
+                include: this.userInclude,
+            });
+
+            return {
+                canCheckIn: false,
+                canCheckOut: true,
+                message: 'Anda sudah check-in hari ini. Silakan check-out.',
+                currentAttendance: attendanceWithUser ? this.mapToResponseDto(attendanceWithUser) : undefined,
+            };
+        }
+
+        // Cek apakah user sudah check-in dan check-out hari ini
+        const todayCompletedAttendance = await this.prisma.attendances.findFirst({
+            where: {
+                userId: query.userId,
+                checkInTime: { gte: getStartOfDay() },
+                checkOutTime: { not: null },
+            },
+            include: this.userInclude,
+            orderBy: { checkInTime: 'desc' },
+        });
+
+        if (todayCompletedAttendance) {
+            // User sudah check-in dan check-out hari ini
+            return {
+                canCheckIn: false,
+                canCheckOut: false,
+                message: 'Anda sudah menyelesaikan absensi hari ini.',
+                currentAttendance: this.mapToResponseDto(todayCompletedAttendance),
+            };
+        }
+
+        // User belum check-in sama sekali hari ini
+        return {
+            canCheckIn: true,
+            canCheckOut: false,
+            message: 'Anda belum check-in hari ini. Silakan check-in.',
+        };
     }
 
 

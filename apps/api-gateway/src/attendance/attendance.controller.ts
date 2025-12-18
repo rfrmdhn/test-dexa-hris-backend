@@ -18,10 +18,12 @@ import {
     CheckOutDto,
     GetAllAttendanceDto,
     GetMyAttendanceDto,
+    GetStatusDto,
     UserPayload,
     UserRole,
     AttendanceResponseDto,
     PaginatedAttendanceResponseDto,
+    CheckInStatusResponseDto,
     sendToService,
 } from '@app/shared';
 
@@ -38,6 +40,18 @@ export class AttendanceController {
     constructor(
         @Inject('ATTENDANCE_SERVICE') private readonly client: ClientProxy,
     ) { }
+
+    @Get('status')
+    @UseGuards(JwtAuthGuard)
+    async getCheckInStatus(@Req() req: AuthenticatedRequest) {
+        const getStatusDto: GetStatusDto = {
+            userId: req.user.sub,
+        };
+
+        return sendToService<CheckInStatusResponseDto>(
+            this.client, 'attendance.get-status', getStatusDto
+        );
+    }
 
     @Post('check-in')
     @UseGuards(JwtAuthGuard)
@@ -93,5 +107,6 @@ export class AttendanceController {
         );
     }
 }
+
 
 

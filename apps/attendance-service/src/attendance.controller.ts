@@ -6,6 +6,7 @@ import {
     CheckOutDto,
     GetAllAttendanceDto,
     GetMyAttendanceDto,
+    GetStatusDto,
 } from '@app/shared';
 
 import { AttendanceService } from './attendance.service';
@@ -33,5 +34,11 @@ export class AttendanceController {
     async getAll(@Payload() query: GetAllAttendanceDto) {
         return this.attendanceService.getAll(query);
     }
+
+    @MessagePattern('attendance.get-status')
+    async getCheckInStatus(@Payload() query: GetStatusDto) {
+        return this.attendanceService.getCheckInStatus(query);
+    }
 }
+
 

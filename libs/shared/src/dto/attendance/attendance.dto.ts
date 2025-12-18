@@ -89,3 +89,16 @@ export class GetAllAttendanceDto {
     limit?: number = 10;
 }
 
+export class GetStatusDto {
+    @IsString()
+    @IsNotEmpty()
+    userId: string;
+}
+
+export class CheckInStatusResponseDto {
+    canCheckIn: boolean;
+    canCheckOut: boolean;
+    message: string;
+    currentAttendance?: AttendanceResponseDto;
+}
+
