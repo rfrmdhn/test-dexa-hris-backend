@@ -18,7 +18,18 @@ export class TransformInterceptor<T>
         return next.handle().pipe(
             map((data) => {
                 const message = data?.message || 'Success';
-                let responseData = data?.data ? data.data : data;
+                let responseData = data;
+                let meta = undefined;
+
+                // Handle Paginated Response
+                if (data && typeof data === 'object' && 'data' in data && 'meta' in data) {
+                    responseData = data.data;
+                    meta = data.meta;
+                }
+                // Handle Wrapped Response (without meta)
+                else if (data?.data) {
+                    responseData = data.data;
+                }
 
                 if (responseData && typeof responseData === 'object' && 'message' in responseData) {
                     const { message: _, ...rest } = responseData;
@@ -29,6 +40,7 @@ export class TransformInterceptor<T>
                     statusCode: context.switchToHttp().getResponse().statusCode,
                     message,
                     data: responseData,
+                    meta,
                     success: true,
                 };
             }),
