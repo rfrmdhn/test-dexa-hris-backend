@@ -12,6 +12,7 @@ import {
     EMPLOYEE_SELECT,
     buildPaginatedResponse,
     calculateSkip,
+    UserMapper,
 } from '@app/shared';
 
 @Injectable()
@@ -25,7 +26,7 @@ export class EmployeeService {
         const [employees, total] = await this.findEmployeesWithCount(where, page, limit);
 
         return buildPaginatedResponse(
-            employees.map((e: Awaited<ReturnType<typeof this.findEmployeesWithCount>>[0][number]) => this.mapToResponseDto(e)),
+            employees.map((e) => UserMapper.toResponseDto(e)),
             total,
             page,
             limit
@@ -43,10 +44,10 @@ export class EmployeeService {
                 throw new NotFoundException('Employee not found');
             }
 
-            return this.mapToResponseDto(employee);
+            return UserMapper.toResponseDto(employee);
         } catch (error) {
             if (error instanceof NotFoundException) throw error;
-            throw new InternalServerErrorException(`FindOne Error: ${error.message} \nStack: ${error.stack}`);
+            throw new InternalServerErrorException('An unexpected error occurred while fetching employee');
         }
     }
 
@@ -64,7 +65,7 @@ export class EmployeeService {
             select: EMPLOYEE_SELECT,
         });
 
-        return this.mapToResponseDto(employee);
+        return UserMapper.toResponseDto(employee);
     }
 
     async update(id: string, updateDto: UpdateEmployeeDto): Promise<EmployeeResponseDto> {
@@ -86,7 +87,7 @@ export class EmployeeService {
             select: EMPLOYEE_SELECT,
         });
 
-        return this.mapToResponseDto(employee);
+        return UserMapper.toResponseDto(employee);
     }
 
     async remove(id: string): Promise<{ message: string }> {
@@ -152,24 +153,6 @@ export class EmployeeService {
         if (updateDto.password) updateData.password = await hashPassword(updateDto.password);
 
         return updateData;
-    }
-
-    private mapToResponseDto(employee: {
-        id: string;
-        email: string;
-        name: string;
-        role: string;
-        createdAt: Date;
-        updatedAt: Date;
-    }): EmployeeResponseDto {
-        return {
-            id: employee.id,
-            email: employee.email,
-            name: employee.name,
-            role: employee.role as EmployeeResponseDto['role'],
-            createdAt: employee.createdAt,
-            updatedAt: employee.updatedAt,
-        };
     }
 }
 

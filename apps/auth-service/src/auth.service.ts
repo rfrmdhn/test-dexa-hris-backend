@@ -1,7 +1,6 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpStatus, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
-import { RpcException } from '@nestjs/microservices';
 
 import {
     PrismaService,
@@ -11,6 +10,7 @@ import {
     UserRole,
     hashPassword,
     comparePassword,
+    UserMapper,
 } from '@app/shared';
 
 @Injectable()
@@ -26,10 +26,7 @@ export class AuthService {
         });
 
         if (existingUser) {
-            throw new RpcException({
-                message: 'User with this email already exists',
-                statusCode: HttpStatus.CONFLICT
-            });
+            throw new ConflictException('User with this email already exists');
         }
 
         const hashedPassword = await hashPassword(registerDto.password);
@@ -46,12 +43,7 @@ export class AuthService {
 
         return {
             message: 'User registered successfully',
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role,
-            },
+            user: UserMapper.toResponseDto(user),
         };
     }
 
@@ -61,13 +53,13 @@ export class AuthService {
         });
 
         if (!user) {
-            throw new RpcException({ message: 'Invalid credentials', statusCode: HttpStatus.UNAUTHORIZED });
+            throw new UnauthorizedException('Invalid credentials');
         }
 
         const isPasswordValid = await comparePassword(loginDto.password, user.password);
 
         if (!isPasswordValid) {
-            throw new RpcException({ message: 'Invalid credentials', statusCode: HttpStatus.UNAUTHORIZED });
+            throw new UnauthorizedException('Invalid credentials');
         }
 
         const payload = {
@@ -80,12 +72,7 @@ export class AuthService {
 
         return {
             access_token: accessToken,
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role as UserRole,
-            },
+            user: UserMapper.toResponseDto(user),
         };
     }
 }

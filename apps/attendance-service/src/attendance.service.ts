@@ -17,6 +17,7 @@ import {
     buildDateRangeFilter,
     buildPaginatedResponse,
     calculateSkip,
+    AttendanceMapper,
 } from '@app/shared';
 
 @Injectable()
@@ -26,47 +27,64 @@ export class AttendanceService {
     private readonly userInclude = { users: { select: USER_SELECT } };
 
     async checkIn(checkInDto: CheckInDto): Promise<AttendanceResponseDto> {
-        const user = await this.prisma.users.findUnique({
-            where: { id: checkInDto.userId },
+        return this.prisma.$transaction(async (tx) => {
+            const user = await tx.users.findUnique({
+                where: { id: checkInDto.userId },
+            });
+
+            if (!user) {
+                throw new NotFoundException('User not found');
+            }
+
+            // Lock or check within transaction
+            const existingCheckIn = await tx.attendances.findFirst({
+                where: {
+                    userId: checkInDto.userId,
+                    checkInTime: { gte: getStartOfDay() },
+                    checkOutTime: null,
+                },
+            });
+
+            if (existingCheckIn) {
+                throw new BadRequestException('You have already checked in today and have not checked out');
+            }
+
+            const attendance = await tx.attendances.create({
+                data: {
+                    id: uuidv4(),
+                    userId: checkInDto.userId,
+                    photoUrl: checkInDto.photoUrl,
+                    checkInTime: new Date(),
+                },
+                include: this.userInclude,
+            });
+
+            return AttendanceMapper.toResponseDto(attendance);
         });
-
-        if (!user) {
-            throw new NotFoundException('User not found');
-        }
-
-        const existingCheckIn = await this.findTodayOpenCheckIn(checkInDto.userId);
-
-        if (existingCheckIn) {
-            throw new BadRequestException('You have already checked in today and have not checked out');
-        }
-
-        const attendance = await this.prisma.attendances.create({
-            data: {
-                id: uuidv4(),
-                userId: checkInDto.userId,
-                photoUrl: checkInDto.photoUrl,
-                checkInTime: new Date(),
-            },
-            include: this.userInclude,
-        });
-
-        return this.mapToResponseDto(attendance);
     }
 
     async checkOut(checkOutDto: CheckOutDto): Promise<AttendanceResponseDto> {
-        const openCheckIn = await this.findTodayOpenCheckIn(checkOutDto.userId);
+        return this.prisma.$transaction(async (tx) => {
+            const openCheckIn = await tx.attendances.findFirst({
+                where: {
+                    userId: checkOutDto.userId,
+                    checkInTime: { gte: getStartOfDay() },
+                    checkOutTime: null,
+                },
+            });
 
-        if (!openCheckIn) {
-            throw new BadRequestException('No active check-in found for today');
-        }
+            if (!openCheckIn) {
+                throw new BadRequestException('No active check-in found for today');
+            }
 
-        const attendance = await this.prisma.attendances.update({
-            where: { id: openCheckIn.id },
-            data: { checkOutTime: new Date() },
-            include: this.userInclude,
+            const attendance = await tx.attendances.update({
+                where: { id: openCheckIn.id },
+                data: { checkOutTime: new Date() },
+                include: this.userInclude,
+            });
+
+            return AttendanceMapper.toResponseDto(attendance);
         });
-
-        return this.mapToResponseDto(attendance);
     }
 
     async getMyAttendance(query: GetMyAttendanceDto): Promise<PaginatedAttendanceResponseDto> {
@@ -76,7 +94,7 @@ export class AttendanceService {
         const [attendances, total] = await this.findAttendancesWithCount(where, page, limit);
 
         return buildPaginatedResponse(
-            attendances.map((a: Awaited<ReturnType<typeof this.findAttendancesWithCount>>[0][number]) => this.mapToResponseDto(a)),
+            attendances.map((a) => AttendanceMapper.toResponseDto(a)),
             total,
             page,
             limit
@@ -90,7 +108,7 @@ export class AttendanceService {
         const [attendances, total] = await this.findAttendancesWithCount(where, page, limit);
 
         return buildPaginatedResponse(
-            attendances.map((a: Awaited<ReturnType<typeof this.findAttendancesWithCount>>[0][number]) => this.mapToResponseDto(a)),
+            attendances.map((a) => AttendanceMapper.toResponseDto(a)),
             total,
             page,
             limit
@@ -109,7 +127,7 @@ export class AttendanceService {
             return {
                 status: AttendanceStatus.CHECKED_IN,
                 message: 'Anda sudah check-in hari ini. Silakan check-out.',
-                currentAttendance: attendanceWithUser ? this.mapToResponseDto(attendanceWithUser) : undefined,
+                currentAttendance: attendanceWithUser ? AttendanceMapper.toResponseDto(attendanceWithUser) : undefined,
             };
         }
 
@@ -127,7 +145,7 @@ export class AttendanceService {
             return {
                 status: AttendanceStatus.CHECKED_OUT,
                 message: 'Anda sudah menyelesaikan absensi hari ini.',
-                currentAttendance: this.mapToResponseDto(todayCompletedAttendance),
+                currentAttendance: AttendanceMapper.toResponseDto(todayCompletedAttendance),
             };
         }
 
@@ -181,24 +199,5 @@ export class AttendanceService {
             }),
             this.prisma.attendances.count({ where }),
         ]);
-    }
-
-    private mapToResponseDto(attendance: {
-        id: string;
-        userId: string;
-        checkInTime: Date;
-        photoUrl: string;
-        checkOutTime: Date | null;
-        users: { id: string; email: string; name: string; role: string };
-    }): AttendanceResponseDto {
-        return {
-            id: attendance.id,
-            checkInTime: attendance.checkInTime,
-            photoUrl: attendance.photoUrl.startsWith('uploads/')
-                ? `/public/${attendance.photoUrl}`
-                : attendance.photoUrl,
-            checkOutTime: attendance.checkOutTime,
-            user: attendance.users,
-        };
     }
 }

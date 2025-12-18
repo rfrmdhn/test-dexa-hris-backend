@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AuthModule } from './auth.module';
 import { Transport } from '@nestjs/microservices';
+import { HttpExceptionFilter } from '@app/shared';
 
 async function bootstrap() {
     const app = await NestFactory.create(AuthModule);
@@ -11,6 +12,9 @@ async function bootstrap() {
         whitelist: true,
         transform: true,
     }));
+
+    // Global Exception Filter
+    app.useGlobalFilters(new HttpExceptionFilter());
 
     // Enable CORS if needed (good practice for direct HTTP access)
     app.enableCors();

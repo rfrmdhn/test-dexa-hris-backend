@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { AttendanceModule } from './attendance.module';
+import { HttpExceptionFilter } from '@app/shared';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AttendanceModule);
@@ -11,6 +12,8 @@ async function bootstrap() {
         whitelist: true,
         transform: true,
     }));
+
+    app.useGlobalFilters(new HttpExceptionFilter());
 
     app.enableCors();
 

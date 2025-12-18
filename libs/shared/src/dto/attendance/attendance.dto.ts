@@ -46,7 +46,7 @@ export class AttendanceResponseDto {
     checkInTime: Date;
     photoUrl: string;
     checkOutTime: Date | null;
-    user: {
+    user?: {
         id: string;
         email: string;
         name: string;
