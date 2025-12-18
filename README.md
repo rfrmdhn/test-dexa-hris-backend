@@ -6,9 +6,7 @@ The backend system for the HRIS (Human Resource Information System) application.
 
 The project consists of the following applications:
 
-*   **API Gateway** (`apps/api-gateway`): The main entry point for client requests. It routes requests to the appropriate microservices.
-*   **Auth Service** (`apps/auth-service`): Handles authentication and authorization.
-*   **Attendance Service** (`apps/attendance-service`): Manages employee attendance records.
+7.  **Attendance Service** (`apps/attendance-service`): Manages employee attendance records.
 
 ## Prerequisites
 
