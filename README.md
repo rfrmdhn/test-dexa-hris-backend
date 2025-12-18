@@ -6,7 +6,8 @@ The backend system for the HRIS (Human Resource Information System) application.
 
 The project consists of the following applications:
 
-7.  **Attendance Service** (`apps/attendance-service`): Manages employee attendance records.
+*   **Auth Service** (`apps/auth-service`): Handles authentication and authorization.
+*   **Attendance Service** (`apps/attendance-service`): Manages employee attendance records.
 
 ## Prerequisites
 
@@ -20,7 +21,7 @@ Ensure you have the following installed on your machine:
 
 1.  **Clone the repository**:
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/rfrmdhn/test-dexa-hris-backend.git
     cd hris-backend
     ```
 
@@ -45,7 +46,6 @@ Ensure you have the following installed on your machine:
     JWT_EXPIRES_IN="24h"
 
     # Service Ports
-    PORT=3000                     # API Gateway
     AUTH_SERVICE_PORT=3001
     ATTENDANCE_SERVICE_PORT=3002
     ```
