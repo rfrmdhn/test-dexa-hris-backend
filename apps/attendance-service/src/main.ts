@@ -1,25 +1,22 @@
 import { NestFactory } from '@nestjs/core';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ValidationPipe } from '@nestjs/common';
 import { AttendanceModule } from './attendance.module';
 
 async function bootstrap() {
-    const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-        AttendanceModule,
-        {
-            transport: Transport.TCP,
-            options: {
-                host: process.env.ATTENDANCE_SERVICE_HOST || '0.0.0.0',
-                port: parseInt(process.env.ATTENDANCE_SERVICE_PORT || '3002'),
-            },
-        },
-    );
+    const app = await NestFactory.create(AttendanceModule);
 
+    // Global Pipes
     app.useGlobalPipes(new ValidationPipe({
         whitelist: true,
         transform: true,
     }));
 
-    await app.listen();
+    // Enable CORS
+    app.enableCors();
+
+    // Start HTTP Server
+    const port = parseInt(process.env.ATTENDANCE_SERVICE_PORT || '3002');
+    await app.listen(port);
+    console.log(`Attendance Service is running on: ${await app.getUrl()}`);
 }
 bootstrap();

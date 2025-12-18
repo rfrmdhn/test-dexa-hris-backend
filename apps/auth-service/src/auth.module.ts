@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '@app/shared';
 
 import { AuthController } from './auth.controller';
+import { EmployeeController } from './employee.controller';
 import { AuthService } from './auth.service';
 import { EmployeeService } from './employee.service';
 
@@ -32,7 +33,7 @@ import { EmployeeService } from './employee.service';
             inject: [ConfigService],
         }),
     ],
-    controllers: [AuthController],
+    controllers: [AuthController, EmployeeController],
     providers: [AuthService, EmployeeService],
 })
 export class AuthModule { }

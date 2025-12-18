@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
 import {
@@ -19,13 +19,13 @@ export class AuthController {
         private readonly employeeService: EmployeeService,
     ) { }
 
-    @MessagePattern('auth.register')
-    async register(@Payload() registerDto: RegisterDto) {
+    @Post('register')
+    async register(@Body() registerDto: RegisterDto) {
         return this.authService.register(registerDto);
     }
 
-    @MessagePattern('auth.login')
-    async login(@Payload() loginDto: LoginDto) {
+    @Post('login')
+    async login(@Body() loginDto: LoginDto) {
         return this.authService.login(loginDto);
     }
 

@@ -9,6 +9,7 @@ export * from './utils/password.utils';
 export * from './utils/microservice-client.utils';
 export * from './utils/query.utils';
 export * from './config/multer.config';
-
-
-
+export * from './auth/guards/jwt-auth.guard';
+export * from './auth/guards/roles.guard';
+export * from './auth/strategies/jwt.strategy';
+export * from './auth/decorators/roles.decorator';

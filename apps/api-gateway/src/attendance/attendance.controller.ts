@@ -45,7 +45,7 @@ export class AttendanceController {
     @UseGuards(JwtAuthGuard)
     async getCheckInStatus(@Req() req: AuthenticatedRequest) {
         const getStatusDto: GetStatusDto = {
-            userId: req.user.sub,
+            userId: req.user.sub, y
         };
 
         return sendToService<CheckInStatusResponseDto>(
