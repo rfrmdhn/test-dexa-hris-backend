@@ -189,17 +189,16 @@ export class AttendanceService {
         checkInTime: Date;
         photoUrl: string;
         checkOutTime: Date | null;
-        users?: { id: string; email: string; name: string; role: string } | null;
+        users: { id: string; email: string; name: string; role: string };
     }): AttendanceResponseDto {
         return {
             id: attendance.id,
-            userId: attendance.userId,
             checkInTime: attendance.checkInTime,
             photoUrl: attendance.photoUrl.startsWith('uploads/')
                 ? `/public/${attendance.photoUrl}`
                 : attendance.photoUrl,
             checkOutTime: attendance.checkOutTime,
-            user: attendance.users ?? undefined,
+            user: attendance.users,
         };
     }
 }
