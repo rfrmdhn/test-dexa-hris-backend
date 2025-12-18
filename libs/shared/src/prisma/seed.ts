@@ -65,6 +65,26 @@ async function main() {
         console.log(`Added attendance record for ${name} (yesterday)`);
     }
 
+    // specific dummy users matching login credentials
+    const specificUsers = [
+        { name: 'John Doe', email: 'john.doe@dexa.com' },
+        { name: 'Jane Smith', email: 'jane.smith@dexa.com' },
+        { name: 'Bob Wilson', email: 'bob.wilson@dexa.com' },
+    ];
+
+    for (const u of specificUsers) {
+        await prisma.users.create({
+            data: {
+                id: uuidv4(),
+                email: u.email,
+                password: await hashPassword('employee123'),
+                name: u.name,
+                role: users_role.EMPLOYEE,
+            },
+        });
+        console.log(`Created Specific Employee: ${u.email}`);
+    }
+
     console.log('\nSeeding completed successfully!');
     console.log('\n--- Login Credentials ---');
     console.log('Admin:    admin@dexa.com / admin123');
