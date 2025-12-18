@@ -27,6 +27,7 @@ model attendances {
   users        users     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, checkInTime])
+  @@index([checkInTime])
 }
 
 enum users_role {

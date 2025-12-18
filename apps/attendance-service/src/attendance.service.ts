@@ -36,7 +36,6 @@ export class AttendanceService {
                 throw new NotFoundException('User not found');
             }
 
-            // Lock or check within transaction
             const existingCheckIn = await tx.attendances.findFirst({
                 where: {
                     userId: checkInDto.userId,

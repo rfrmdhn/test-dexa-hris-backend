@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PassportModule } from '@nestjs/passport'; // Added
+import { PassportModule } from '@nestjs/passport';
 
-import { PrismaModule, JwtStrategy } from '@app/shared'; // Added JwtStrategy
+import { PrismaModule, JwtStrategy } from '@app/shared';
 
 import { AttendanceController } from './attendance.controller';
 import { AttendanceService } from './attendance.service';
@@ -14,9 +14,10 @@ import { AttendanceService } from './attendance.service';
             envFilePath: './.env',
         }),
         PrismaModule,
-        PassportModule, // Added
+        PrismaModule,
+        PassportModule,
     ],
     controllers: [AttendanceController],
-    providers: [AttendanceService, JwtStrategy], // Added JwtStrategy
+    providers: [AttendanceService, JwtStrategy],
 })
 export class AttendanceModule { }

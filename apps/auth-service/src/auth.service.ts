@@ -11,6 +11,7 @@ import {
     hashPassword,
     comparePassword,
     UserMapper,
+    UserValidator,
 } from '@app/shared';
 
 @Injectable()
@@ -21,13 +22,9 @@ export class AuthService {
     ) { }
 
     async register(registerDto: RegisterDto) {
-        const existingUser = await this.prisma.users.findUnique({
-            where: { email: registerDto.email },
-        });
 
-        if (existingUser) {
-            throw new ConflictException('User with this email already exists');
-        }
+
+        await UserValidator.validateEmailDoesNotExist(this.prisma, registerDto.email);
 
         const hashedPassword = await hashPassword(registerDto.password);
 

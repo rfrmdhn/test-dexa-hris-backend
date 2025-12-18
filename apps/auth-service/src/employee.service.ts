@@ -13,6 +13,7 @@ import {
     buildPaginatedResponse,
     calculateSkip,
     UserMapper,
+    UserValidator,
 } from '@app/shared';
 
 @Injectable()
@@ -52,7 +53,7 @@ export class EmployeeService {
     }
 
     async create(createDto: CreateEmployeeDto): Promise<EmployeeResponseDto> {
-        await this.ensureEmailNotExists(createDto.email);
+        await UserValidator.validateEmailDoesNotExist(this.prisma, createDto.email);
 
         const employee = await this.prisma.users.create({
             data: {
@@ -76,7 +77,7 @@ export class EmployeeService {
         }
 
         if (updateDto.email && updateDto.email !== existingEmployee.email) {
-            await this.ensureEmailNotExists(updateDto.email);
+            await UserValidator.validateEmailDoesNotExist(this.prisma, updateDto.email);
         }
 
         const updateData = await this.buildUpdateData(updateDto);
@@ -103,12 +104,7 @@ export class EmployeeService {
     }
 
 
-    private async ensureEmailNotExists(email: string): Promise<void> {
-        const existingUser = await this.prisma.users.findUnique({ where: { email } });
-        if (existingUser) {
-            throw new ConflictException('User with this email already exists');
-        }
-    }
+
 
     private buildEmployeeWhere(params: { search?: string; role?: string }): Record<string, unknown> {
         const where: Record<string, unknown> = {};

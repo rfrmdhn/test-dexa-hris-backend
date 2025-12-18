@@ -8,6 +8,7 @@ export * from './utils/query.utils';
 export * from './utils/microservice-client.utils';
 export * from './utils/user.mapper';
 export * from './utils/attendance.mapper';
+export * from './utils/user.validator';
 export * from './filters/http-exception.filter';
 export * from './interfaces/response.interface';
 export * from './config/multer.config';
