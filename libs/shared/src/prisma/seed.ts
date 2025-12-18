@@ -30,26 +30,25 @@ async function main() {
     });
     console.log(`Created Admin: ${admin.email}`);
 
-    const employees = [
-        { name: 'John Doe', email: 'john.doe@dexa.com' },
-        { name: 'Jane Smith', email: 'jane.smith@dexa.com' },
-        { name: 'Bob Wilson', email: 'bob.wilson@dexa.com' },
-    ];
-
-    for (const emp of employees) {
+    // Create 20 Dummy Employees
+    for (let i = 1; i <= 20; i++) {
         const empId = uuidv4();
-        const empPassword = await hashPassword('employee123');
+        const empPassword = await hashPassword('employee123'); // Default password for all
+        const name = `Employee ${i}`;
+        const email = `employee${i}@dexa.com`;
+
         const user = await prisma.users.create({
             data: {
                 id: empId,
-                email: emp.email,
+                email,
                 password: empPassword,
-                name: emp.name,
+                name,
                 role: users_role.EMPLOYEE,
             },
         });
         console.log(`Created Employee: ${user.email}`);
 
+        // Add dummy attendance for yesterday
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         yesterday.setHours(8, 30, 0, 0);
@@ -63,7 +62,7 @@ async function main() {
                 checkOutTime: new Date(yesterday.getTime() + 8 * 60 * 60 * 1000),
             },
         });
-        console.log(`Added attendance record for ${emp.name} (yesterday)`);
+        console.log(`Added attendance record for ${name} (yesterday)`);
     }
 
     console.log('\nSeeding completed successfully!');
