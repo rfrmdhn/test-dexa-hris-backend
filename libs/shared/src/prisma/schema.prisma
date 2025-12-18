@@ -4,6 +4,18 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id          String        @id @db.VarChar(36)
+  email       String        @unique
+  password    String        @db.VarChar(255)
+  name        String        @db.VarChar(255)
+  role        users_role    @default(EMPLOYEE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now()) @updatedAt
+  attendances attendances[]
 }
 
 model attendances {
@@ -15,17 +27,7 @@ model attendances {
   users        users     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, checkInTime])
-}
-
-model users {
-  id          String        @id @db.VarChar(36)
-  email       String        @unique
-  password    String        @db.VarChar(255)
-  name        String        @db.VarChar(255)
-  role        users_role    @default(EMPLOYEE)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @default(now())
-  attendances attendances[]
+  @@index([checkInTime])
 }
 
 enum users_role {
