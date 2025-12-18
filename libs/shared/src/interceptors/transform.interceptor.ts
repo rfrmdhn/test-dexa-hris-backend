@@ -18,11 +18,8 @@ export class TransformInterceptor<T>
         return next.handle().pipe(
             map((data) => {
                 const message = data?.message || 'Success';
-
-                // Extract the actual data, removing message from it if present
                 let responseData = data?.data ? data.data : data;
 
-                // If responseData has a message property, remove it to avoid duplication
                 if (responseData && typeof responseData === 'object' && 'message' in responseData) {
                     const { message: _, ...rest } = responseData;
                     responseData = rest;

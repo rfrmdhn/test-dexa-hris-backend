@@ -5,26 +5,10 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 const DEFAULT_TIMEOUT = 30000;
 
-/**
- * Options for microservice client calls
- */
 export interface MicroserviceCallOptions {
-    /** Timeout in milliseconds (default: 30000) */
     timeout?: number;
 }
 
-/**
- * Wrapper for microservice client calls with built-in error handling and timeout
- * @param client - The ClientProxy instance
- * @param pattern - The message pattern to send
- * @param data - The data payload
- * @param options - Optional configuration
- * @returns Promise with the response data
- * 
- * @example
- * // In controller
- * const result = await sendToService(this.authClient, 'auth.login', loginDto);
- */
 export async function sendToService<TResult = unknown, TInput = unknown>(
     client: ClientProxy,
     pattern: string,
@@ -75,16 +59,6 @@ export async function sendToService<TResult = unknown, TInput = unknown>(
     );
 }
 
-/**
- * Emit event to microservice (fire-and-forget)
- * @param client - The ClientProxy instance  
- * @param pattern - The event pattern
- * @param data - The event data
- * 
- * @example
- * // Fire and forget
- * emitEvent(this.notificationClient, 'notification.send', { userId: '123', message: 'Hello' });
- */
 export function emitEvent<TInput = unknown>(
     client: ClientProxy,
     pattern: string,
@@ -93,17 +67,6 @@ export function emitEvent<TInput = unknown>(
     client.emit(pattern, data);
 }
 
-/**
- * Batch send to multiple microservices in parallel
- * @param calls - Array of service call configurations
- * @returns Promise with all results
- * 
- * @example
- * const [users, attendances] = await batchSend([
- *   { client: authClient, pattern: 'user.find-all', data: {} },
- *   { client: attendanceClient, pattern: 'attendance.get-all', data: {} }
- * ]);
- */
 export async function batchSend<TResult = unknown>(
     calls: Array<{
         client: ClientProxy;

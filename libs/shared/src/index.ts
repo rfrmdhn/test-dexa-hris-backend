@@ -8,6 +8,7 @@ export * from './interceptors/transform.interceptor';
 export * from './utils/password.utils';
 export * from './utils/microservice-client.utils';
 export * from './utils/query.utils';
+export * from './config/multer.config';
 
 
 

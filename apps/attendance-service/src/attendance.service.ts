@@ -108,7 +108,6 @@ export class AttendanceService {
         const openCheckIn = await this.findTodayOpenCheckIn(query.userId);
 
         if (openCheckIn) {
-            // User sudah check-in hari ini dan belum check-out
             const attendanceWithUser = await this.prisma.attendances.findUnique({
                 where: { id: openCheckIn.id },
                 include: this.userInclude,
@@ -121,7 +120,6 @@ export class AttendanceService {
             };
         }
 
-        // Cek apakah user sudah check-in dan check-out hari ini
         const todayCompletedAttendance = await this.prisma.attendances.findFirst({
             where: {
                 userId: query.userId,
@@ -133,7 +131,6 @@ export class AttendanceService {
         });
 
         if (todayCompletedAttendance) {
-            // User sudah check-in dan check-out hari ini
             return {
                 status: AttendanceStatus.CHECKED_OUT,
                 message: 'Anda sudah menyelesaikan absensi hari ini.',
@@ -141,13 +138,11 @@ export class AttendanceService {
             };
         }
 
-        // User belum check-in sama sekali hari ini
         return {
             status: AttendanceStatus.NOT_CHECKED_IN,
             message: 'Anda belum check-in hari ini. Silakan check-in.',
         };
     }
-
 
     private async findTodayOpenCheckIn(userId: string) {
         return this.prisma.attendances.findFirst({
@@ -213,5 +208,3 @@ export class AttendanceService {
         };
     }
 }
-
-
