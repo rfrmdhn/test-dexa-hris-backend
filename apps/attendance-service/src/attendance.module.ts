@@ -14,7 +14,6 @@ import { AttendanceService } from './attendance.service';
             envFilePath: './.env',
         }),
         PrismaModule,
-        PrismaModule,
         PassportModule,
     ],
     controllers: [AttendanceController],

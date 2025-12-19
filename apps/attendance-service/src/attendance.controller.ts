@@ -7,6 +7,7 @@ import {
     UploadedFile,
     Req,
     Query,
+    BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
@@ -16,6 +17,7 @@ import {
     CheckOutDto,
     GetAllAttendanceDto,
     GetMyAttendanceDto,
+    GetMyAttendanceQueryDto,
     GetStatusDto,
     UserPayload,
     UserRole,
@@ -23,13 +25,12 @@ import {
     RolesGuard,
     Roles,
     multerConfig,
+    CurrentUser,
 } from '@app/shared';
 
 import { AttendanceService } from './attendance.service';
 
-interface AuthenticatedRequest extends Request {
-    user: UserPayload;
-}
+
 
 @Controller('attendance')
 export class AttendanceController {
@@ -37,9 +38,9 @@ export class AttendanceController {
 
     @Get('status')
     @UseGuards(JwtAuthGuard)
-    async getCheckInStatus(@Req() req: AuthenticatedRequest) {
+    async getCheckInStatus(@CurrentUser() user: UserPayload) {
         const getStatusDto: GetStatusDto = {
-            userId: req.user.sub,
+            userId: user.sub,
         };
         return this.attendanceService.getCheckInStatus(getStatusDto);
     }
@@ -49,20 +50,24 @@ export class AttendanceController {
     @UseInterceptors(FileInterceptor('photo', multerConfig))
     async checkIn(
         @UploadedFile() file: Express.Multer.File,
-        @Req() req: AuthenticatedRequest,
+        @CurrentUser() user: UserPayload,
     ) {
+        if (!file) {
+            throw new BadRequestException('Photo is required');
+        }
+
         const checkInDto: CheckInDto = {
-            userId: req.user.sub,
-            photoUrl: file ? `uploads/${file.filename}` : '',
+            userId: user.sub,
+            photoUrl: `uploads/${file.filename}`,
         };
         return this.attendanceService.checkIn(checkInDto);
     }
 
     @Post('check-out')
     @UseGuards(JwtAuthGuard)
-    async checkOut(@Req() req: AuthenticatedRequest) {
+    async checkOut(@CurrentUser() user: UserPayload) {
         const checkOutDto: CheckOutDto = {
-            userId: req.user.sub,
+            userId: user.sub,
         };
         return this.attendanceService.checkOut(checkOutDto);
     }
@@ -70,11 +75,11 @@ export class AttendanceController {
     @Get('my')
     @UseGuards(JwtAuthGuard)
     async getMyAttendance(
-        @Req() req: AuthenticatedRequest,
-        @Query() query: GetAllAttendanceDto,
+        @CurrentUser() user: UserPayload,
+        @Query() query: GetMyAttendanceQueryDto,
     ) {
         const getMyDto: GetMyAttendanceDto = {
-            userId: req.user.sub,
+            userId: user.sub,
             ...query,
         };
         return this.attendanceService.getMyAttendance(getMyDto);

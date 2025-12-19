@@ -16,3 +16,4 @@ export * from './auth/guards/jwt-auth.guard';
 export * from './auth/guards/roles.guard';
 export * from './auth/strategies/jwt.strategy';
 export * from './auth/decorators/roles.decorator';
+export * from './decorators/user.decorator';
