@@ -64,11 +64,7 @@ export class PaginatedAttendanceResponseDto {
     };
 }
 
-export class GetAllAttendanceDto {
-    @IsOptional()
-    @IsString()
-    userId?: string;
-
+export class GetMyAttendanceQueryDto {
     @IsOptional()
     startDate?: string;
 
@@ -86,6 +82,12 @@ export class GetAllAttendanceDto {
     @Min(1)
     @Type(() => Number)
     limit?: number = 10;
+}
+
+export class GetAllAttendanceDto extends GetMyAttendanceQueryDto {
+    @IsOptional()
+    @IsString()
+    userId?: string;
 }
 
 export class GetStatusDto {

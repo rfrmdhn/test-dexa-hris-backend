@@ -7,6 +7,8 @@ import {
     CreateEmployeeDto,
     UpdateEmployeeDto,
     GetAllEmployeesDto,
+    UserMapper,
+    buildPaginatedResponse,
 } from '@app/shared';
 
 import { AuthService } from './auth.service';
@@ -21,32 +23,49 @@ export class AuthController {
 
     @Post('register')
     async register(@Body() registerDto: RegisterDto) {
-        return this.authService.register(registerDto);
+        const user = await this.authService.register(registerDto);
+        return {
+            message: 'User registered successfully',
+            user: UserMapper.toResponseDto(user),
+        };
     }
 
     @Post('login')
     async login(@Body() loginDto: LoginDto) {
-        return this.authService.login(loginDto);
+        const result = await this.authService.login(loginDto);
+        return {
+            access_token: result.access_token,
+            user: UserMapper.toResponseDto(result.user),
+        };
     }
 
     @MessagePattern('employee.find-all')
     async findAllEmployees(@Payload() query: GetAllEmployeesDto) {
-        return this.employeeService.findAll(query);
+        const { data, total } = await this.employeeService.findAll(query);
+        return buildPaginatedResponse(
+            data.map(user => UserMapper.toResponseDto(user)),
+            total,
+            query.page || 1,
+            query.limit || 10
+        );
     }
 
     @MessagePattern('employee.find-one')
     async findOneEmployee(@Payload() data: { id: string }) {
-        return this.employeeService.findOne(data.id);
+        const employee = await this.employeeService.findOne(data.id);
+        return UserMapper.toResponseDto(employee);
     }
 
     @MessagePattern('employee.create')
     async createEmployee(@Payload() createDto: CreateEmployeeDto) {
-        return this.employeeService.create(createDto);
+        const employee = await this.employeeService.create(createDto);
+        return UserMapper.toResponseDto(employee);
     }
 
     @MessagePattern('employee.update')
     async updateEmployee(@Payload() data: { id: string; updateDto: UpdateEmployeeDto }) {
-        return this.employeeService.update(data.id, data.updateDto);
+        const employee = await this.employeeService.update(data.id, data.updateDto);
+        return UserMapper.toResponseDto(employee);
     }
 
     @MessagePattern('employee.remove')

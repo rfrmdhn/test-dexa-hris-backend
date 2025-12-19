@@ -1,53 +1,29 @@
 import { Injectable, HttpStatus, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { v4 as uuidv4 } from 'uuid';
+
 
 import {
-    PrismaService,
     RegisterDto,
     LoginDto,
-    LoginResponseDto,
-    UserRole,
-    hashPassword,
     comparePassword,
-    UserMapper,
-    UserValidator,
+    UsersRepository,
 } from '@app/shared';
+
+import { users } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
     constructor(
-        private readonly prisma: PrismaService,
+        private readonly usersRepository: UsersRepository,
         private readonly jwtService: JwtService,
     ) { }
 
-    async register(registerDto: RegisterDto) {
-
-
-        await UserValidator.validateEmailDoesNotExist(this.prisma, registerDto.email);
-
-        const hashedPassword = await hashPassword(registerDto.password);
-
-        const user = await this.prisma.users.create({
-            data: {
-                id: uuidv4(),
-                email: registerDto.email,
-                password: hashedPassword,
-                name: registerDto.name,
-                role: registerDto.role || 'EMPLOYEE',
-            },
-        });
-
-        return {
-            message: 'User registered successfully',
-            user: UserMapper.toResponseDto(user),
-        };
+    async register(registerDto: RegisterDto): Promise<users> {
+        return this.usersRepository.create(registerDto) as Promise<users>;
     }
 
-    async login(loginDto: LoginDto): Promise<LoginResponseDto> {
-        const user = await this.prisma.users.findUnique({
-            where: { email: loginDto.email },
-        });
+    async login(loginDto: LoginDto): Promise<{ access_token: string; user: users }> {
+        const user = await this.usersRepository.findByEmail(loginDto.email);
 
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
@@ -69,7 +45,7 @@ export class AuthService {
 
         return {
             access_token: accessToken,
-            user: UserMapper.toResponseDto(user),
+            user,
         };
     }
 }

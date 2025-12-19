@@ -40,7 +40,7 @@ export class UpdateEmployeeDto {
     role?: UserRole;
 }
 
-export class GetAllEmployeesDto {
+export class GetAllEmployeesQueryDto {
     @IsOptional()
     @IsInt()
     @Min(1)
@@ -61,6 +61,8 @@ export class GetAllEmployeesDto {
     @IsEnum(UserRole)
     role?: UserRole;
 }
+
+export class GetAllEmployeesDto extends GetAllEmployeesQueryDto { }
 
 export class EmployeeResponseDto {
     id: string;
