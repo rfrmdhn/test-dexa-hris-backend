@@ -21,6 +21,8 @@ import {
     JwtAuthGuard,
     RolesGuard,
     Roles,
+    UserMapper,
+    buildPaginatedResponse,
 } from '@app/shared';
 
 import { EmployeeService } from './employee.service';
@@ -36,27 +38,37 @@ export class EmployeeController {
     @Get('profile')
     @Roles(UserRole.EMPLOYEE, UserRole.ADMIN)
     async getProfile(@Request() req: { user: UserPayload }) {
-        return this.employeeService.findOne(req.user.sub);
+        const employee = await this.employeeService.findOne(req.user.sub);
+        return UserMapper.toResponseDto(employee);
     }
 
     @Get()
     async findAll(@Query() query: GetAllEmployeesDto) {
-        return this.employeeService.findAll(query);
+        const { data, total } = await this.employeeService.findAll(query);
+        return buildPaginatedResponse(
+            data.map((user) => UserMapper.toResponseDto(user)),
+            total,
+            query.page || 1,
+            query.limit || 10
+        );
     }
 
     @Get(':id')
     async findOne(@Param('id') id: string) {
-        return this.employeeService.findOne(id);
+        const employee = await this.employeeService.findOne(id);
+        return UserMapper.toResponseDto(employee);
     }
 
     @Post()
     async create(@Body() createDto: CreateEmployeeDto) {
-        return this.employeeService.create(createDto);
+        const employee = await this.employeeService.create(createDto);
+        return UserMapper.toResponseDto(employee);
     }
 
     @Put(':id')
     async update(@Param('id') id: string, @Body() updateDto: UpdateEmployeeDto) {
-        return this.employeeService.update(id, updateDto);
+        const employee = await this.employeeService.update(id, updateDto);
+        return UserMapper.toResponseDto(employee);
     }
 
     @Patch(':id')
