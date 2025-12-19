@@ -37,11 +37,7 @@ export class AttendanceService {
             }
 
             const existingCheckIn = await tx.attendances.findFirst({
-                where: {
-                    userId: checkInDto.userId,
-                    checkInTime: { gte: getStartOfDay() },
-                    checkOutTime: null,
-                },
+                where: this.getTodayOpenCheckInWhere(checkInDto.userId),
             });
 
             if (existingCheckIn) {
@@ -65,11 +61,7 @@ export class AttendanceService {
     async checkOut(checkOutDto: CheckOutDto): Promise<AttendanceResponseDto> {
         return this.prisma.$transaction(async (tx) => {
             const openCheckIn = await tx.attendances.findFirst({
-                where: {
-                    userId: checkOutDto.userId,
-                    checkInTime: { gte: getStartOfDay() },
-                    checkOutTime: null,
-                },
+                where: this.getTodayOpenCheckInWhere(checkOutDto.userId),
             });
 
             if (!openCheckIn) {
@@ -118,15 +110,10 @@ export class AttendanceService {
         const openCheckIn = await this.findTodayOpenCheckIn(query.userId);
 
         if (openCheckIn) {
-            const attendanceWithUser = await this.prisma.attendances.findUnique({
-                where: { id: openCheckIn.id },
-                include: this.userInclude,
-            });
-
             return {
                 status: AttendanceStatus.CHECKED_IN,
                 message: 'Anda sudah check-in hari ini. Silakan check-out.',
-                currentAttendance: attendanceWithUser ? AttendanceMapper.toResponseDto(attendanceWithUser) : undefined,
+                currentAttendance: AttendanceMapper.toResponseDto(openCheckIn),
             };
         }
 
@@ -156,11 +143,8 @@ export class AttendanceService {
 
     private async findTodayOpenCheckIn(userId: string) {
         return this.prisma.attendances.findFirst({
-            where: {
-                userId,
-                checkInTime: { gte: getStartOfDay() },
-                checkOutTime: null,
-            },
+            where: this.getTodayOpenCheckInWhere(userId),
+            include: this.userInclude,
         });
     }
 
@@ -198,5 +182,12 @@ export class AttendanceService {
             }),
             this.prisma.attendances.count({ where }),
         ]);
+    }
+    private getTodayOpenCheckInWhere(userId: string) {
+        return {
+            userId,
+            checkInTime: { gte: getStartOfDay() },
+            checkOutTime: null,
+        };
     }
 }
