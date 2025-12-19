@@ -14,7 +14,7 @@ async function main() {
     console.log('Starting database seeding...');
 
     console.log('Clearing existing data...');
-    await prisma.attendances.deleteMany();
+
     await prisma.users.deleteMany();
 
     const adminId = uuidv4();
@@ -47,22 +47,6 @@ async function main() {
             },
         });
         console.log(`Created Employee: ${user.email}`);
-
-        // Add dummy attendance for yesterday
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(8, 30, 0, 0);
-
-        await prisma.attendances.create({
-            data: {
-                id: uuidv4(),
-                userId: empId,
-                checkInTime: yesterday,
-                photoUrl: 'uploads/sample-checkin.jpg',
-                checkOutTime: new Date(yesterday.getTime() + 8 * 60 * 60 * 1000),
-            },
-        });
-        console.log(`Added attendance record for ${name} (yesterday)`);
     }
 
     // specific dummy users matching login credentials
