@@ -1,6 +1,6 @@
 # HRIS Backend
 
-The backend system for the HRIS (Human Resource Information System) application. This project is structured as a **NestJS Monorepo**, consisting of an API Gateway and multiple microservices.
+The backend system for the HRIS (Human Resource Information System) application. This project is structured as a **NestJS Monorepo**, consisting of multiple microservices.
 
 ## Architecture
 
@@ -68,7 +68,7 @@ Ensure you have the following installed on your machine:
     ```
 
 3.  **Seed Database**:
-    Populate the database with initial data (Admin user, etc.):
+    Populate the database with initial data (Admin user, Employees):
     ```bash
     npx prisma db seed
     ```
