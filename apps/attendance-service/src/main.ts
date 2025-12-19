@@ -6,24 +6,26 @@ import { AttendanceModule } from './attendance.module';
 import { HttpExceptionFilter } from '@app/shared';
 
 async function bootstrap() {
-    const app = await NestFactory.create<NestExpressApplication>(AttendanceModule);
+  const app =
+    await NestFactory.create<NestExpressApplication>(AttendanceModule);
 
-    app.useGlobalPipes(new ValidationPipe({
-        whitelist: true,
-        transform: true,
-    }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
 
-    app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new HttpExceptionFilter());
 
-    app.enableCors();
+  app.enableCors();
 
-    app.useStaticAssets(join(process.cwd(), 'public'), {
-        prefix: '/public/',
-    });
+  app.useStaticAssets(join(process.cwd(), 'public'), {
+    prefix: '/public/',
+  });
 
-    const port = parseInt(process.env.ATTENDANCE_SERVICE_PORT || '3002');
-    await app.listen(port);
-    console.log(`Attendance Service is running on: ${await app.getUrl()}`);
+  const port = parseInt(process.env.ATTENDANCE_SERVICE_PORT || '3002');
+  await app.listen(port);
+  console.log(`Attendance Service is running on: ${await app.getUrl()}`);
 }
 bootstrap();
-
