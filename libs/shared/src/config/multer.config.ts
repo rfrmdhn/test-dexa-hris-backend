@@ -9,26 +9,26 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = /\/(jpg|jpeg|png|gif|webp)$/;
 
 export const multerConfig: MulterOptions = {
-    storage: diskStorage({
-        destination: (req, file, cb) => {
-            if (!existsSync(UPLOAD_PATH)) {
-                mkdirSync(UPLOAD_PATH, { recursive: true });
-            }
-            cb(null, UPLOAD_PATH);
-        },
-        filename: (req, file, cb) => {
-            const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
-            cb(null, uniqueName);
-        },
-    }),
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.match(ALLOWED_MIME_TYPES)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only image files are allowed!'), false);
-        }
+  storage: diskStorage({
+    destination: (req, file, cb) => {
+      if (!existsSync(UPLOAD_PATH)) {
+        mkdirSync(UPLOAD_PATH, { recursive: true });
+      }
+      cb(null, UPLOAD_PATH);
     },
-    limits: {
-        fileSize: MAX_FILE_SIZE,
+    filename: (req, file, cb) => {
+      const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
+      cb(null, uniqueName);
     },
+  }),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.match(ALLOWED_MIME_TYPES)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  },
+  limits: {
+    fileSize: MAX_FILE_SIZE,
+  },
 };

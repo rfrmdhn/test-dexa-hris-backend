@@ -6,23 +6,23 @@ import { UserPayload } from '../../dto/auth/auth.dto';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor(private readonly configService: ConfigService) {
-        const secret = configService.get<string>('JWT_SECRET');
-        if (!secret) {
-            throw new Error('JWT_SECRET environment variable is required');
-        }
-        super({
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            ignoreExpiration: false,
-            secretOrKey: secret,
-        });
+  constructor(private readonly configService: ConfigService) {
+    const secret = configService.get<string>('JWT_SECRET');
+    if (!secret) {
+      throw new Error('JWT_SECRET environment variable is required');
     }
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: secret,
+    });
+  }
 
-    async validate(payload: UserPayload): Promise<UserPayload> {
-        return {
-            sub: payload.sub,
-            email: payload.email,
-            role: payload.role,
-        };
-    }
+  async validate(payload: UserPayload): Promise<UserPayload> {
+    return {
+      sub: payload.sub,
+      email: payload.email,
+      role: payload.role,
+    };
+  }
 }

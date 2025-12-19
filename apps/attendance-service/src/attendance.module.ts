@@ -8,15 +8,15 @@ import { AttendanceController } from './attendance.controller';
 import { AttendanceService } from './attendance.service';
 
 @Module({
-    imports: [
-        ConfigModule.forRoot({
-            isGlobal: true,
-            envFilePath: './.env',
-        }),
-        PrismaModule,
-        PassportModule,
-    ],
-    controllers: [AttendanceController],
-    providers: [AttendanceService, JwtStrategy],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: './.env',
+    }),
+    PrismaModule,
+    PassportModule,
+  ],
+  controllers: [AttendanceController],
+  providers: [AttendanceService, JwtStrategy],
 })
-export class AttendanceModule { }
+export class AttendanceModule {}
