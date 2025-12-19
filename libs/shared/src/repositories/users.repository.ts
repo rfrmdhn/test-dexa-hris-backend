@@ -2,9 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { hashPassword } from '../utils/password.utils';
 import { UserValidator } from '../utils/user.validator';
-import {
-  UpdateEmployeeDto,
-} from '../dto/employee/employee.dto';
+import { UpdateEmployeeDto } from '../dto/employee/employee.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../dto/auth/auth.dto';
 import { users } from '@prisma/client';
@@ -12,7 +10,7 @@ import { calculateSkip, EMPLOYEE_SELECT } from '../utils/query.utils';
 
 @Injectable()
 export class UsersRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAllWithCount(params: {
     page: number;
