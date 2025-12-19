@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { hashPassword } from '../utils/password.utils';
 import { UserValidator } from '../utils/user.validator';
 import {
-  CreateEmployeeDto,
   UpdateEmployeeDto,
 } from '../dto/employee/employee.dto';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,7 +12,7 @@ import { calculateSkip, EMPLOYEE_SELECT } from '../utils/query.utils';
 
 @Injectable()
 export class UsersRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async findAllWithCount(params: {
     page: number;
